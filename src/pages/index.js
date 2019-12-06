@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import styled from "styled-components"
 import TextareaAutosize from "react-autosize-textarea"
-
+import {
+  Button,
+  Typography,
+  CircularProgress,
+  Divider
+} from "@material-ui/core"
 import Header from "../components/header"
 
-import { generateText } from "../api"
+import { generateText, START_TOKEN } from "../api"
 
 const Main = styled.div`
   width: 50%;
   margin: 0 auto;
+  margin-bottom: 1rem;
 `
 
 const StyledTextArea = styled(TextareaAutosize)`
@@ -27,36 +33,63 @@ const TitleWrapper = styled.div`
   flex-direction: column;
 `
 
+const LoadingMoreWrapper = styled.div`
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+`
+
 const Article = styled.div``
 
-const SubmitButton = styled.button`
-  width: max-content;
-  height: 2rem;
-  margin: 0 auto;
-  margin-top: 1rem;
+const ButtonWrapper = styled.div`
+  && {
+    position: relative;
+    min-height: 1rem;
+    margin: 0 auto;
+    margin-top: 1rem;
+  }
+`
+
+const ButtonProgress = styled(CircularProgress)`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -12px;
+  margin-left: -12px;
 `
 
 const IndexPage = () => {
-  const [outputText, setOutputText] = useState("")
-  const [inputTitle, setInputTitle] = useState("")
+  const [content, setContent] = useState("")
+  const [title, setTitle] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isFinished, setIsFinished] = useState(false)
 
   const handleSubmit = async () => {
-    let formattedInputTitle = inputTitle.replace(/\r?\n|\r/g, "")
-    setInputTitle(formattedInputTitle)
-    setIsGenerating(true)
-    const { text } = await generateText(formattedInputTitle)
-    // want to split the text into title and text
-    const [outputTitle, outputText] = text
-      .split("TITLE:")[1]
-      .split("TEXT:")
-      .map(str => str.trim())
+    let length = 320
+    let text = null
+    let hasMore = true
+    while (hasMore && length < 1023) {
+      setIsGenerating(true)
+      let prefix = text || `${START_TOKEN}\nTITLE:${title}`
+      const output = await generateText(prefix, length)
 
-    // map the \n to <br />
-    console.log("Response text:")
-    console.log(text)
-    setOutputText(outputText)
-    setInputTitle(outputTitle)
+      setContent(output.content)
+      setTitle(output.title)
+      hasMore = output.hasMore
+      text = output.text
+      length += 150
+    }
+    setIsGenerating(false)
+    setIsFinished(true)
+  }
+
+  const handleReset = () => {
+    setContent("")
+    setTitle("")
+    setIsGenerating(false)
+    setIsFinished(false)
   }
 
   return (
@@ -66,22 +99,51 @@ const IndexPage = () => {
         <StyledTextArea
           rows='2'
           autoFocus
-          disabled={isGenerating}
-          value={inputTitle}
+          disabled={isGenerating || isFinished}
+          value={title}
           placeholder='Enter a title for your satirical article or leave this blank to autogenerate'
-          onChange={e => setInputTitle(e.target.value.replace(/\r?\n|\r/g, ""))}
+          onChange={e => setTitle(e.target.value.replace(/\r?\n|\r/g, ""))}
         />
-        {outputText === "" && (
-          <SubmitButton onClick={handleSubmit} disabled={isGenerating}>
-            {isGenerating ? "Generating..." : "Generate Text"}
-          </SubmitButton>
+        {content === "" && !isFinished && (
+          <ButtonWrapper>
+            <Button
+              variant='outlined'
+              color='primary'
+              onClick={handleSubmit}
+              disabled={isGenerating}
+            >
+              {"Generate Article"}
+            </Button>
+            {isGenerating && <ButtonProgress size={24} />}
+          </ButtonWrapper>
         )}
       </TitleWrapper>
       <Article>
-        {outputText.split("\n").map((item, index) => (
-          <p key={index}>{item}</p>
-        ))}
+        {content !== "" &&
+          content.split("\n").map((item, index) => (
+            <Typography variant='body1' key={index} paragraph>
+              {item}
+            </Typography>
+          ))}
       </Article>
+      {content !== "" && isGenerating && !isFinished && (
+        <LoadingMoreWrapper>
+          <CircularProgress size={24} />
+          <Typography variant='caption'>
+            Generating the rest of the article
+          </Typography>
+        </LoadingMoreWrapper>
+      )}
+      {isFinished && (
+        <>
+          <Divider />
+          <LoadingMoreWrapper>
+            <Button variant='outlined' onClick={handleReset}>
+              Generate Another
+            </Button>
+          </LoadingMoreWrapper>
+        </>
+      )}
     </Main>
   )
 }
