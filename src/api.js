@@ -4,6 +4,7 @@
 const BASE_URL = "https://gpt-i3kazt6kva-an.a.run.app"
 export const START_TOKEN = "<|startoftext|>"
 export const END_TOKEN = "<|endoftext|>"
+const sleep = m => new Promise(r => setTimeout(r, m))
 
 export async function generateText(prefix, length = 100) {
   let params = {
@@ -41,16 +42,12 @@ export async function generateText(prefix, length = 100) {
           content,
           hasMore
         }
-      case 500:
-        // waiting 2 seconds before trying again
-        console.log("Server 500 Error when generating the text")
-        return await generateText(prefix, length)
       default:
-        console.log("Unknown server error")
+        await sleep(2000)
         return await generateText(prefix, length)
     }
   } catch (err) {
-    console.log(err)
+    await sleep(2000)
     return await generateText(prefix, length)
   }
 }

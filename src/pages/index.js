@@ -12,9 +12,12 @@ import Header from "../components/header"
 import { generateText, START_TOKEN } from "../api"
 
 const Main = styled.div`
-  width: 50%;
+  width: 95%;
   margin: 0 auto;
   margin-bottom: 1rem;
+  @media (min-width: 768px) {
+    width: 55%;
+  }
 `
 
 const StyledTextArea = styled(TextareaAutosize)`
@@ -97,7 +100,7 @@ const IndexPage = () => {
       <Header siteTitle='GPT-2 Satire' />
       <TitleWrapper>
         <StyledTextArea
-          rows='2'
+          rows={2}
           autoFocus
           disabled={isGenerating || isFinished}
           value={title}
@@ -121,7 +124,7 @@ const IndexPage = () => {
       <Article>
         {content !== "" &&
           content.split("\n").map((item, index) => (
-            <Typography variant='body1' key={index} paragraph>
+            <Typography variant='body1' key={index} paragraph align='justify'>
               {item}
             </Typography>
           ))}
