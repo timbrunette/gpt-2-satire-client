@@ -6,10 +6,16 @@ export const START_TOKEN = "<|startoftext|>"
 export const END_TOKEN = "<|endoftext|>"
 const sleep = m => new Promise(r => setTimeout(r, m))
 
-export async function generateText(prefix, length = 100) {
+export async function generateText(
+  prefix,
+  length = 100,
+  temperature = 1.0,
+  top_p = 0.9
+) {
   let params = {
     prefix,
-    temperature: 0.8,
+    temperature,
+    top_p,
     length,
     truncate: false
   }
