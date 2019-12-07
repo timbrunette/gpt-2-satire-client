@@ -12,16 +12,17 @@ import Header from "../components/header"
 import { generateText, START_TOKEN } from "../api"
 
 const Main = styled.div`
+  font-family: sans-serif;
   width: 95%;
   margin: 0 auto;
   margin-bottom: 1rem;
-  @media (min-width: 768px) {
-    width: 55%;
+  @media (min-width: 620px) {
+    width: 600px;
   }
 `
 
 const StyledTextArea = styled(TextareaAutosize)`
-  font-size: 2rem;
+  font-size: 1.9rem;
   width: 100%;
   border: none;
   resize: none;

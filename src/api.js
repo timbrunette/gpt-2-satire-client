@@ -9,7 +9,7 @@ const sleep = m => new Promise(r => setTimeout(r, m))
 export async function generateText(
   prefix,
   length = 100,
-  temperature = 1.0,
+  temperature = 0.85,
   top_p = 0.9
 ) {
   let params = {
